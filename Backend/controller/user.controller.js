@@ -1,7 +1,7 @@
 const userModel = require('../models/user.model');
 const { validationResult } = require('express-validator');
 const { createUser } = require('../services/user.service');
-const blackListTokenModel = require('../models/blacklistToken.model');
+const blacklistTokenModel = require('../models/blacklistToken.model');
 
 module.exports.registerUser = async (req, res, next) => {
    const err = validationResult(req);
@@ -9,7 +9,12 @@ module.exports.registerUser = async (req, res, next) => {
       return res.status(400).json({ errors: err.array() });
    }
    const { fullname, email, password } = req.body;
-   console.log(req.body)
+
+   const isUserAlreadyExists = await userModel.findOne({ email })
+   if (isUserAlreadyExists) {
+      return res.status(400).json({ message: "User Already Exists" })
+   }
+
    const hashedPassword = await userModel.hashPassword(password);
    const user = await createUser({
       firstname: fullname.firstname,
@@ -32,11 +37,7 @@ module.exports.loginUser = async (req, res, next) => {
    }
 
    const { email, password } = req.body;
-
-   const isUserAlreadyExists = await captainModel.findOne({ email })
-   if (isUserAlreadyExists) {
-      return res.status(400).json({ message: "User Already Exists" })
-   }
+   
 
    const user = await userModel.findOne({ email }).select("+password");
 
@@ -50,19 +51,19 @@ module.exports.loginUser = async (req, res, next) => {
    }
 
    const token = await user.generateAuthToken();
-   res.cookie("token", token, {})
-
+   res.cookie("token", token)
+ 
    res.status(200).json({ user, token });
-}
-
+}  
+  
 module.exports.userProfile = async (req, res, next) => {
    const user = req.user;
    res.status(200).json({ user });
 }
-
-module.exports.logoutUser = async (req, res, next) => {
+ 
+module.exports.logoutUser = async (req, res, next) => { 
    res.clearCookie('token');
-   const token = req.cookies.token || req.headers.authorization.split(' ')[1];
-   await blackListTokenModel.create({ token })
+   const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+   await blacklistTokenModel.create({ token })
    res.status(200).json({ message: "User Logged out" })
-}
+}   

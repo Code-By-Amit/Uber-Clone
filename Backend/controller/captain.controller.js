@@ -4,7 +4,7 @@ const { validationResult } = require('express-validator');
 const blacklistTokenModel = require('../models/blacklistToken.model');
 
 module.exports.registerCaptain = async (req, res, next) => {
-
+    
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -44,8 +44,9 @@ module.exports.loginCaptain = async (req, res, next) => {
     }
 
     const { email, password } = req.body;
-    const captain = await captainModel.findOne({ email }).select('+password')
 
+    const captain = await captainModel.findOne({ email }).select('+password');
+   
     if (!captain) {
         return res.status(400).json({ message: "Invalid Email or Password" })
     }
@@ -59,7 +60,7 @@ module.exports.loginCaptain = async (req, res, next) => {
     res.cookie('token', token);
     res.status(200).json({ captain, token })
 }
-
+ 
 module.exports.getCaptainProfile = async (req, res, next) => {
     const captain = req.captain;
     res.status(200).json({ captain });

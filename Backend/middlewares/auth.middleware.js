@@ -45,7 +45,6 @@ module.exports.authCaptain = async (req, res, next) => {
     try {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(decoded)
         const captain = await captainModel.findById(decoded._id);
         req.captain = captain;
 
